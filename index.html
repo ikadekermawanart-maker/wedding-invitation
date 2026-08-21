@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Wedding Invitation</title>
+  <title>Digital Invitation</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <main>
     <section class="hero">
-      <img id="coverImage" class="hero-image" alt="Foto cover pengantin">
+      <img id="coverImage" class="hero-image" alt="Foto utama acara">
       <div class="overlay"></div>
       <div class="hero-content">
-        <p class="eyebrow">The Wedding of</p>
-        <h1 id="coupleName">Angga & Dellya</h1>
+        <p id="eventLabel" class="eyebrow">You're Invited</p>
+        <h1 id="eventTitle">Special Celebration</h1>
         <p>Kepada Yth.</p>
         <h2 id="guestName">Tamu Undangan</h2>
         <button id="openInvitation">Buka Undangan</button>
@@ -21,9 +21,28 @@
     </section>
 
     <section id="content" class="content hidden">
+      <section class="card event-card">
+        <p id="eventTypeText" class="eyebrow dark">Invitation</p>
+        <h3 id="mainName">Nama Acara</h3>
+        <p id="subtitle" class="lead"></p>
+
+        <div class="event-meta">
+          <div><strong>Tanggal</strong><span id="eventDate">-</span></div>
+          <div><strong>Waktu</strong><span id="eventTime">-</span></div>
+          <div><strong>Lokasi</strong><span id="eventLocation">-</span></div>
+        </div>
+
+        <p id="description" class="description"></p>
+      </section>
+
+      <section id="galleryCard" class="card hidden">
+        <h3>Galeri</h3>
+        <div id="gallery" class="gallery"></div>
+      </section>
+
       <section class="card">
         <h3>Ucapan & Doa</h3>
-        <p class="muted">Tinggalkan ucapan untuk kedua mempelai.</p>
+        <p class="muted">Tinggalkan ucapan untuk pemilik acara.</p>
 
         <form id="commentForm">
           <label>Nama
@@ -42,17 +61,8 @@
         </div>
         <div id="comments" class="comments"></div>
       </section>
-
-      <section class="card builder">
-        <h3>Demo Upload & Kompres Foto</h3>
-        <p class="muted">Foto diproses di browser: resize maksimal 1600 px lalu diubah ke WebP.</p>
-        <input id="photoInput" type="file" accept="image/*">
-        <div id="compressInfo" class="status"></div>
-        <img id="previewImage" class="preview" alt="Preview hasil kompres">
-      </section>
     </section>
   </main>
-
   <script src="/script.js"></script>
 </body>
 </html>

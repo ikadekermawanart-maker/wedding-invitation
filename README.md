@@ -1,83 +1,34 @@
-# Wedding Invitation MVP
+# Invitation Builder V1
 
-Fitur awal:
-- Nama tamu dari `?to=Nama`
-- Komentar/ucapan tamu tersimpan di Cloudflare D1
-- Upload foto lokal
-- Resize maksimal 1600px
-- Kompres otomatis ke WebP
-- Template undangan sederhana
+## Fitur
+- Wedding, Sweet Seventeen, Birthday, Engagement, Anniversary, Baby Shower, Graduation, Custom Event
+- Data acara tersimpan di D1
+- Nama tamu dari URL `?event=slug&to=Nama`
+- Komentar per acara
+- Admin builder di `/admin.html`
+- Upload foto cover dan galeri
+- Foto otomatis resize + kompres WebP di browser
+- Foto disimpan di Cloudflare R2
+- Generator link tamu
 
-## 1. Install Node.js
-Gunakan Node.js versi LTS.
+## Binding
+D1:
+- Variable name: `DB`
+- Database: `wedding-comments`
 
-## 2. Login Cloudflare
+R2:
+- Variable name: `MEDIA`
+- Bucket: misalnya `invitation-media`
 
-```bash
-npx wrangler login
-```
+## Database
+Jalankan `schema.sql` di D1 Console.
 
-## 3. Buat database D1
+## URL
+Admin:
+`https://DOMAIN.pages.dev/admin.html`
 
-```bash
-npx wrangler d1 create wedding-comments
-```
+Undangan:
+`https://DOMAIN.pages.dev/?event=vio-sweet17&to=Kadek`
 
-Salin `database_id` dari hasil perintah tersebut.
-
-## 4. Buat konfigurasi Wrangler
-
-Salin:
-
-`wrangler.toml.example` → `wrangler.toml`
-
-Kemudian ganti:
-
-`PASTE-YOUR-D1-DATABASE-ID-HERE`
-
-dengan ID database D1 Anda.
-
-## 5. Buat tabel komentar
-
-```bash
-npx wrangler d1 execute wedding-comments --remote --file=schema.sql
-```
-
-## 6. Jalankan secara lokal
-
-```bash
-npx wrangler pages dev . --d1 DB=DATABASE_ID_ANDA
-```
-
-Buka URL lokal yang muncul.
-
-Contoh nama tamu:
-
-`http://localhost:8788/?to=Vio`
-
-## 7. Deploy
-
-Cara paling stabil untuk Pages Functions adalah menghubungkan project ke GitHub/GitLab atau deploy dengan Wrangler.
-
-```bash
-npx wrangler pages project create
-npx wrangler pages deploy .
-```
-
-Setelah project dibuat, pastikan D1 binding bernama `DB` terhubung ke database `wedding-comments`.
-
-Di Cloudflare Dashboard:
-Workers & Pages → project → Settings → Bindings → Add → D1 database
-
-Variable name:
-`DB`
-
-Database:
-`wedding-comments`
-
-Kemudian redeploy.
-
-## Catatan foto
-
-Demo kompres foto saat ini memproses foto di browser dan menampilkan hasil kompres.
-Tahap berikutnya adalah menyimpan hasil foto ke storage (R2) dan menghubungkannya ke builder/admin.
+## Catatan keamanan
+V1 belum memiliki login admin. Jangan gunakan sebagai produk publik final sebelum autentikasi admin ditambahkan.
