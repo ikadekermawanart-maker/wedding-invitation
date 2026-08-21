@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Wedding Invitation</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <img id="coverImage" class="hero-image" alt="Foto cover pengantin">
+      <div class="overlay"></div>
+      <div class="hero-content">
+        <p class="eyebrow">The Wedding of</p>
+        <h1 id="coupleName">Angga & Dellya</h1>
+        <p>Kepada Yth.</p>
+        <h2 id="guestName">Tamu Undangan</h2>
+        <button id="openInvitation">Buka Undangan</button>
+      </div>
+    </section>
+
+    <section id="content" class="content hidden">
+      <section class="card">
+        <h3>Ucapan & Doa</h3>
+        <p class="muted">Tinggalkan ucapan untuk kedua mempelai.</p>
+
+        <form id="commentForm">
+          <label>Nama
+            <input id="commentName" maxlength="80" required>
+          </label>
+          <label>Ucapan
+            <textarea id="commentMessage" maxlength="500" required></textarea>
+          </label>
+          <button type="submit">Kirim Ucapan</button>
+          <p id="formStatus" class="status" aria-live="polite"></p>
+        </form>
+
+        <div class="comments-head">
+          <h4>Ucapan Tamu</h4>
+          <span id="commentCount">0 ucapan</span>
+        </div>
+        <div id="comments" class="comments"></div>
+      </section>
+
+      <section class="card builder">
+        <h3>Demo Upload & Kompres Foto</h3>
+        <p class="muted">Foto diproses di browser: resize maksimal 1600 px lalu diubah ke WebP.</p>
+        <input id="photoInput" type="file" accept="image/*">
+        <div id="compressInfo" class="status"></div>
+        <img id="previewImage" class="preview" alt="Preview hasil kompres">
+      </section>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>

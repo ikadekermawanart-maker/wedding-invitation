@@ -1,0 +1,8 @@
+name = "wedding-invitation-mvp"
+compatibility_date = "2026-08-21"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wedding-comments"
+database_id = "PASTE-YOUR-D1-DATABASE-ID-HERE"
