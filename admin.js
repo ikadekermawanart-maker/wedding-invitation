@@ -69,6 +69,22 @@ async function uploadBlob(blob,slug,kind,index=0){
   return data.url;
 }
 
+function renderGalleryPreview(){
+  $("galleryPreview").replaceChildren();
+
+  for(const url of galleryUrls){
+    const img=document.createElement("img");
+    img.src=url;
+    img.alt="Preview galeri";
+    $("galleryPreview").appendChild(img);
+  }
+
+  $("galleryInfo").textContent=
+    galleryUrls.length
+      ? `${galleryUrls.length} dari 6 foto galeri tersimpan.`
+      : "Belum ada foto galeri.";
+}
+
 $("coverInput").addEventListener("change",async e=>{
   const file=e.target.files?.[0];
   const slug=sanitizeSlug($("slug").value);
@@ -98,10 +114,10 @@ $("coverInput").addEventListener("change",async e=>{
 });
 
 $("galleryInput").addEventListener("change",async e=>{
-  const list=[...(e.target.files||[])].slice(0,6);
+  const selected=[...(e.target.files||[])];
   const slug=sanitizeSlug($("slug").value);
 
-  if(!list.length) return;
+  if(!selected.length) return;
 
   if(!slug){
     $("galleryInfo").textContent="Isi Slug / URL acara terlebih dahulu.";
@@ -109,25 +125,39 @@ $("galleryInput").addEventListener("change",async e=>{
     return;
   }
 
-  $("galleryInfo").textContent="Mengompres dan mengupload galeri...";
-  galleryUrls=[];
-  $("galleryPreview").replaceChildren();
+  const remainingSlots=Math.max(0,6-galleryUrls.length);
+
+  if(remainingSlots===0){
+    $("galleryInfo").textContent="Galeri sudah penuh: maksimal 6 foto.";
+    e.target.value="";
+    return;
+  }
+
+  const files=selected.slice(0,remainingSlots);
+
+  if(selected.length>remainingSlots){
+    $("galleryInfo").textContent=
+      `Hanya ${remainingSlots} foto yang bisa ditambahkan karena batas total 6 foto. Mengupload...`;
+  }else{
+    $("galleryInfo").textContent="Mengompres dan menambahkan foto...";
+  }
 
   try{
-    for(let i=0;i<list.length;i++){
-      const out=await compressImage(list[i],1400,.76);
-      const url=await uploadBlob(out.blob,slug,"gallery",i);
+    const startIndex=galleryUrls.length;
 
+    for(let i=0;i<files.length;i++){
+      const out=await compressImage(files[i],1400,.76);
+      const index=startIndex+i;
+      const url=await uploadBlob(out.blob,slug,"gallery",index);
       galleryUrls.push(url);
-
-      const img=document.createElement("img");
-      img.src=url;
-      img.alt="Preview galeri";
-      $("galleryPreview").appendChild(img);
     }
 
+    renderGalleryPreview();
+
     $("galleryInfo").textContent=
-      `${galleryUrls.length} foto berhasil diupload dan dikompres.`;
+      `${galleryUrls.length} dari 6 foto galeri tersimpan.`;
+
+    e.target.value="";
   }catch(err){
     $("galleryInfo").textContent=err.message;
   }
@@ -150,7 +180,7 @@ function collectEvent(){
     maps_url:$("mapsUrl").value.trim(),
     description:$("description").value.trim(),
     cover_url:coverUrl,
-    gallery_urls:galleryUrls
+    gallery_urls:galleryUrls.slice(0,6)
   };
 }
 
@@ -220,9 +250,8 @@ $("loadEvent").addEventListener("click",async()=>{
     $("description").value=e.description||"";
 
     coverUrl=e.cover_url||"";
-    galleryUrls=Array.isArray(e.gallery_urls)?e.gallery_urls:[];
+    galleryUrls=Array.isArray(e.gallery_urls)?e.gallery_urls.slice(0,6):[];
 
-    // Preview cover
     if(coverUrl){
       $("coverPreview").src=coverUrl;
       $("coverPreview").style.display="block";
@@ -233,20 +262,7 @@ $("loadEvent").addEventListener("click",async()=>{
       $("coverInfo").textContent="Belum ada foto cover.";
     }
 
-    // Preview galeri
-    $("galleryPreview").replaceChildren();
-
-    for(const url of galleryUrls){
-      const img=document.createElement("img");
-      img.src=url;
-      img.alt="Preview galeri";
-      $("galleryPreview").appendChild(img);
-    }
-
-    $("galleryInfo").textContent=
-      galleryUrls.length
-        ? `${galleryUrls.length} foto galeri tersimpan.`
-        : "Belum ada foto galeri.";
+    renderGalleryPreview();
 
     $("saveStatus").textContent="Data berhasil dimuat.";
   }catch(err){
