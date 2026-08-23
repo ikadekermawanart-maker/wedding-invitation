@@ -118,3 +118,58 @@
   cursor:not-allowed;
 }
 
+/* Dress Code Admin */
+.dresscode-admin{
+  margin:22px 0;
+  padding:18px;
+  border:1px solid var(--line,#ddd);
+  border-radius:18px;
+  background:rgba(255,255,255,.35);
+}
+.dresscode-admin h4{
+  margin:0 0 8px;
+  font:400 24px Georgia,serif;
+}
+.dresscode-color-group{
+  margin-top:18px;
+}
+.dresscode-color-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+.dresscode-color-head strong{
+  font-size:13px;
+}
+.dresscode-colors{
+  display:grid;
+  gap:8px;
+}
+.dresscode-color-item{
+  display:grid;
+  grid-template-columns:44px 1fr 42px;
+  gap:8px;
+  align-items:center;
+}
+.dresscode-color-item input[type="color"]{
+  width:44px;
+  height:42px;
+  padding:3px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  background:#fff;
+}
+.dresscode-hex{
+  margin:0!important;
+}
+.dresscode-remove{
+  min-width:42px;
+  padding:8px!important;
+}
+.dresscode-help{
+  margin-top:14px;
+  font-size:11px;
+}
+
