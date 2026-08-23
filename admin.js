@@ -566,6 +566,72 @@ $("shareWhatsApp").addEventListener("click",()=>{
   window.open(waUrl,"_blank","noopener");
 });
 
+
+$("duplicateEvent").addEventListener("click",async()=>{
+  const sourceSlug=sanitizeSlug($("slug").value);
+
+  if(!sourceSlug){
+    $("saveStatus").textContent="Muat event yang ingin diduplikat terlebih dahulu.";
+    return;
+  }
+
+  const raw=prompt(
+    `Duplikat event "${sourceSlug}".\n\nMasukkan slug baru:`,
+    `${sourceSlug}-copy`
+  );
+
+  if(raw===null)return;
+
+  const targetSlug=sanitizeSlug(raw);
+
+  if(!targetSlug){
+    alert("Slug baru tidak valid.");
+    return;
+  }
+
+  if(targetSlug===sourceSlug){
+    alert("Slug baru harus berbeda dari slug lama.");
+    return;
+  }
+
+  const ok=confirm(
+    `Duplikat event?\n\nDari:\n${sourceSlug}\n\nMenjadi:\n${targetSlug}\n\n`+
+    `Data acara, foto, galeri, musik, Maps, dan Dress Code akan direferensikan ke event baru.\n`+
+    `Komentar tamu TIDAK akan disalin.`
+  );
+
+  if(!ok)return;
+
+  $("saveStatus").textContent="Menduplikat event...";
+
+  try{
+    const r=await fetch("/api/duplicate-event",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        source_slug:sourceSlug,
+        target_slug:targetSlug
+      })
+    });
+
+    const data=await r.json();
+
+    if(!r.ok){
+      throw new Error(data.error||"Gagal menduplikat event");
+    }
+
+    $("slug").value=targetSlug;
+    $("saveStatus").textContent=
+      `Event berhasil diduplikat menjadi "${targetSlug}". Memuat data baru...`;
+
+    // Load the newly-created event into the form.
+    $("loadEvent").click();
+
+  }catch(err){
+    $("saveStatus").textContent=err.message;
+  }
+});
+
 $("loadEvent").addEventListener("click",async()=>{
   const slug=sanitizeSlug($("slug").value);
 
