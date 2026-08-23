@@ -313,27 +313,58 @@ function normalizeHex(value){
   return /^#[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : null;
 }
 
+function normalizeDressItem(item){
+  if(typeof item==="string"){
+    const color=normalizeHex(item);
+    return color ? {color,name:""} : null;
+  }
+
+  if(item && typeof item==="object"){
+    const color=normalizeHex(item.color);
+    if(!color)return null;
+
+    return {
+      color,
+      name:String(item.name||"").trim().slice(0,40)
+    };
+  }
+
+  return null;
+}
+
 function renderDressColors(type){
-  const list = type==="male" ? maleDressColors : femaleDressColors;
-  const wrap = type==="male" ? $("maleColors") : $("femaleColors");
+  const list=type==="male" ? maleDressColors : femaleDressColors;
+  const wrap=type==="male" ? $("maleColors") : $("femaleColors");
 
   wrap.replaceChildren();
 
-  list.forEach((color,index)=>{
-    const item=document.createElement("div");
-    item.className="dresscode-color-item";
+  list.forEach((item,index)=>{
+    const normalized=normalizeDressItem(item);
+    if(!normalized)return;
+
+    list[index]=normalized;
+
+    const row=document.createElement("div");
+    row.className="dresscode-color-item dresscode-color-item-named";
 
     const picker=document.createElement("input");
     picker.type="color";
-    picker.value=color;
+    picker.value=normalized.color;
     picker.title="Pilih warna";
 
-    const text=document.createElement("input");
-    text.type="text";
-    text.value=color.toUpperCase();
-    text.maxLength=7;
-    text.placeholder="#000000";
-    text.className="dresscode-hex";
+    const hex=document.createElement("input");
+    hex.type="text";
+    hex.value=normalized.color;
+    hex.maxLength=7;
+    hex.placeholder="#000000";
+    hex.className="dresscode-hex";
+
+    const name=document.createElement("input");
+    name.type="text";
+    name.value=normalized.name;
+    name.maxLength=40;
+    name.placeholder="Nama warna, contoh: Black";
+    name.className="dresscode-color-name";
 
     const remove=document.createElement("button");
     remove.type="button";
@@ -344,21 +375,26 @@ function renderDressColors(type){
     const updateColor=(value)=>{
       const valid=normalizeHex(value);
       if(!valid)return;
-      list[index]=valid;
+
+      list[index].color=valid;
       picker.value=valid;
-      text.value=valid;
+      hex.value=valid;
     };
 
     picker.addEventListener("input",()=>updateColor(picker.value));
-    text.addEventListener("change",()=>updateColor(text.value));
+    hex.addEventListener("change",()=>updateColor(hex.value));
+
+    name.addEventListener("input",()=>{
+      list[index].name=name.value.trim().slice(0,40);
+    });
 
     remove.addEventListener("click",()=>{
       list.splice(index,1);
       renderDressColors(type);
     });
 
-    item.append(picker,text,remove);
-    wrap.appendChild(item);
+    row.append(picker,hex,name,remove);
+    wrap.appendChild(row);
   });
 }
 
@@ -370,7 +406,11 @@ function addDressColor(type,color="#000000"){
     return;
   }
 
-  list.push(normalizeHex(color)||"#000000");
+  list.push({
+    color:normalizeHex(color)||"#000000",
+    name:""
+  });
+
   renderDressColors(type);
 }
 
@@ -716,11 +756,17 @@ $("loadEvent").addEventListener("click",async()=>{
     $("dresscodeNote").value=e.dresscode_note||"";
 
     maleDressColors=Array.isArray(e.dresscode_male_colors)
-      ? e.dresscode_male_colors.filter(normalizeHex).slice(0,6)
+      ? e.dresscode_male_colors
+          .map(normalizeDressItem)
+          .filter(Boolean)
+          .slice(0,6)
       : [];
 
     femaleDressColors=Array.isArray(e.dresscode_female_colors)
-      ? e.dresscode_female_colors.filter(normalizeHex).slice(0,6)
+      ? e.dresscode_female_colors
+          .map(normalizeDressItem)
+          .filter(Boolean)
+          .slice(0,6)
       : [];
 
     renderDressColors("male");
