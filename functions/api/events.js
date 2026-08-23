@@ -27,6 +27,10 @@ export async function onRequestGet(context){
       location,
       maps_url,
       music_url,
+      dresscode_title,
+      dresscode_note,
+      dresscode_male_colors,
+      dresscode_female_colors,
       description,
       cover_url,
       gallery_urls,
@@ -41,6 +45,22 @@ export async function onRequestGet(context){
   }
 
   row.gallery_urls=row.gallery_urls?JSON.parse(row.gallery_urls):[];
+
+  try{
+    row.dresscode_male_colors=row.dresscode_male_colors
+      ? JSON.parse(row.dresscode_male_colors)
+      : [];
+  }catch{
+    row.dresscode_male_colors=[];
+  }
+
+  try{
+    row.dresscode_female_colors=row.dresscode_female_colors
+      ? JSON.parse(row.dresscode_female_colors)
+      : [];
+  }catch{
+    row.dresscode_female_colors=[];
+  }
 
   return json({event:row});
 }
@@ -58,6 +78,19 @@ export async function onRequestPost(context){
   const title=String(body.event_title||"").trim();
   const mapsUrl=String(body.maps_url||"").trim();
   const musicUrl=String(body.music_url||"").trim();
+  const dresscodeTitle=String(body.dresscode_title||"").trim();
+  const dresscodeNote=String(body.dresscode_note||"").trim();
+
+  const cleanColors=(value)=>{
+    if(!Array.isArray(value)) return [];
+    return value
+      .map(v=>String(v||"").trim().toUpperCase())
+      .filter(v=>/^#[0-9A-F]{6}$/.test(v))
+      .slice(0,6);
+  };
+
+  const maleColors=cleanColors(body.dresscode_male_colors);
+  const femaleColors=cleanColors(body.dresscode_female_colors);
 
   if(!/^[a-z0-9-]{1,80}$/.test(slug)){
     return json({error:"Slug tidak valid"},400);
@@ -96,12 +129,16 @@ export async function onRequestPost(context){
       location,
       maps_url,
       music_url,
+      dresscode_title,
+      dresscode_note,
+      dresscode_male_colors,
+      dresscode_female_colors,
       description,
       cover_url,
       gallery_urls,
       updated_at
     )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
     ON CONFLICT(slug) DO UPDATE SET
       event_type=excluded.event_type,
       event_type_label=excluded.event_type_label,
@@ -114,6 +151,10 @@ export async function onRequestPost(context){
       location=excluded.location,
       maps_url=excluded.maps_url,
       music_url=excluded.music_url,
+      dresscode_title=excluded.dresscode_title,
+      dresscode_note=excluded.dresscode_note,
+      dresscode_male_colors=excluded.dresscode_male_colors,
+      dresscode_female_colors=excluded.dresscode_female_colors,
       description=excluded.description,
       cover_url=excluded.cover_url,
       gallery_urls=excluded.gallery_urls,
@@ -131,6 +172,10 @@ export async function onRequestPost(context){
     String(body.location||"").slice(0,240),
     mapsUrl.slice(0,1000),
     musicUrl.slice(0,1000),
+    dresscodeTitle.slice(0,120),
+    dresscodeNote.slice(0,220),
+    JSON.stringify(maleColors),
+    JSON.stringify(femaleColors),
     String(body.description||"").slice(0,1200),
     String(body.cover_url||"").slice(0,500),
     gallery
