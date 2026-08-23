@@ -18,6 +18,22 @@ let dragIndex=null;
 
 const $=id=>document.getElementById(id);
 
+const invitationTemplateUrls={
+  sweet17:"https://sweet-seventeen-template.pages.dev"
+};
+
+function getInvitationBaseUrl(type){
+  const configured=invitationTemplateUrls[type];
+  return configured || location.origin;
+}
+
+function buildInvitationUrl(slug,guestName="Tamu"){
+  const type=$("eventType").value;
+  const base=getInvitationBaseUrl(type).replace(/\/+$/,"");
+
+  return `${base}/?event=${encodeURIComponent(slug)}&to=${encodeURIComponent(guestName)}`;
+}
+
 function sanitizeSlug(v){
   return v.toLowerCase().trim()
     .replace(/[^a-z0-9\s-]/g,"")
@@ -293,8 +309,6 @@ $("galleryInput").addEventListener("change",async e=>{
   }
 });
 
-
-
 function normalizeHex(value){
   const v=String(value||"").trim();
   return /^#[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : null;
@@ -435,8 +449,6 @@ $("removeMusic").addEventListener("click",()=>{
   $("musicPreview").style.display="none";
   $("removeMusic").style.display="none";
   $("musicInfo").textContent="Musik dihapus dari event. Klik Simpan Undangan.";
-
-  // File fisik di R2 sengaja tidak langsung dihapus untuk keamanan.
 });
 
 function collectEvent(){
@@ -494,8 +506,8 @@ $("eventForm").addEventListener("submit",async e=>{
 
     if(!r.ok) throw new Error(data.error||"Gagal menyimpan");
 
-    status.textContent=
-      `Tersimpan. Link: ${location.origin}/?event=${encodeURIComponent(event.slug)}&to=Tamu`;
+    const invitationUrl=buildInvitationUrl(event.slug,"Tamu");
+    status.textContent=`Tersimpan. Link: ${invitationUrl}`;
   }catch(err){
     status.textContent=err.message;
   }
@@ -603,8 +615,7 @@ $("generateLinks").addEventListener("click",()=>{
   }
 
   for(const name of names){
-    const url=
-      `${location.origin}/?event=${encodeURIComponent(slug)}&to=${encodeURIComponent(name)}`;
+    const url=buildInvitationUrl(slug,name);
 
     const row=document.createElement("div");
     row.className="guest-link-row";
