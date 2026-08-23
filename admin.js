@@ -11,6 +11,7 @@ custom:["You're Invited","Custom Event"]
 
 let coverUrl="";
 let galleryUrls=[];
+let musicUrl="";
 let dragIndex=null;
 
 const $=id=>document.getElementById(id);
@@ -290,6 +291,82 @@ $("galleryInput").addEventListener("change",async e=>{
   }
 });
 
+
+async function uploadMusicFile(file,slug){
+  const allowedTypes=[
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/mp4",
+    "audio/x-m4a",
+    "audio/aac"
+  ];
+
+  if(!allowedTypes.includes(file.type)){
+    throw new Error("Format musik tidak didukung. Gunakan MP3, M4A, atau AAC.");
+  }
+
+  if(file.size>12*1024*1024){
+    throw new Error("Ukuran musik terlalu besar. Maksimal 12 MB.");
+  }
+
+  const r=await fetch(
+    `/api/upload?slug=${encodeURIComponent(slug)}&kind=music`,
+    {
+      method:"POST",
+      headers:{"Content-Type":file.type},
+      body:file
+    }
+  );
+
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||"Upload musik gagal");
+
+  return data.url;
+}
+
+$("musicInput").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  const slug=sanitizeSlug($("slug").value);
+
+  if(!file) return;
+
+  if(!slug){
+    $("musicInfo").textContent="Isi Slug / URL acara terlebih dahulu.";
+    e.target.value="";
+    return;
+  }
+
+  $("musicInfo").textContent="Mengupload musik...";
+
+  try{
+    const url=await uploadMusicFile(file,slug);
+    musicUrl=`${url.split("?")[0]}?v=${Date.now()}`;
+
+    $("musicPreview").src=musicUrl;
+    $("musicPreview").style.display="block";
+    $("removeMusic").style.display="inline-flex";
+
+    $("musicInfo").textContent=
+      `${file.name} • ${(file.size/1024/1024).toFixed(2)} MB • berhasil diupload`;
+
+    e.target.value="";
+  }catch(err){
+    $("musicInfo").textContent=err.message;
+  }
+});
+
+$("removeMusic").addEventListener("click",()=>{
+  musicUrl="";
+  $("musicPreview").pause();
+  $("musicPreview").removeAttribute("src");
+  $("musicPreview").load();
+  $("musicPreview").style.display="none";
+  $("removeMusic").style.display="none";
+  $("musicInfo").textContent="Musik dihapus dari event. Klik Simpan Undangan.";
+
+  // File fisik di R2 sengaja tidak langsung dihapus untuk keamanan.
+});
+
 function collectEvent(){
   const type=$("eventType").value;
 
@@ -305,6 +382,7 @@ function collectEvent(){
     event_time:$("eventTime").value,
     location:$("eventLocation").value.trim(),
     maps_url:$("mapsUrl").value.trim(),
+    music_url:musicUrl,
     description:$("description").value.trim(),
     cover_url:coverUrl,
     gallery_urls:galleryUrls.slice(0,6)
@@ -375,6 +453,22 @@ $("loadEvent").addEventListener("click",async()=>{
     $("eventLocation").value=e.location||"";
     $("mapsUrl").value=e.maps_url||"";
     $("description").value=e.description||"";
+
+    musicUrl=e.music_url||"";
+
+    if(musicUrl){
+      $("musicPreview").src=musicUrl;
+      $("musicPreview").style.display="block";
+      $("removeMusic").style.display="inline-flex";
+      $("musicInfo").textContent="Musik tersimpan untuk event ini.";
+    }else{
+      $("musicPreview").pause();
+      $("musicPreview").removeAttribute("src");
+      $("musicPreview").load();
+      $("musicPreview").style.display="none";
+      $("removeMusic").style.display="none";
+      $("musicInfo").textContent="Belum ada musik.";
+    }
 
     coverUrl=e.cover_url||"";
     galleryUrls=Array.isArray(e.gallery_urls)?e.gallery_urls.slice(0,6):[];
