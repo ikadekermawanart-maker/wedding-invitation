@@ -16,90 +16,42 @@
       </div>
       <a class="secondary-btn" href="/" target="_blank">Buka Website</a>
     </header>
-
     <section class="admin-grid">
       <form id="eventForm" class="card">
         <h3>Data Acara</h3>
-
-        <label>Slug / URL acara
-          <input id="slug" placeholder="vio-sweet17" maxlength="80" required>
-        </label>
-
+        <label>Slug / URL acara <input id="slug" placeholder="vio-sweet17" maxlength="80" required></label>
         <label>Jenis acara
           <select id="eventType">
-            <option value="wedding">Wedding</option>
-            <option value="sweet17">Sweet Seventeen</option>
-            <option value="birthday">Birthday</option>
-            <option value="engagement">Engagement</option>
-            <option value="anniversary">Anniversary</option>
-            <option value="babyshower">Baby Shower</option>
-            <option value="graduation">Graduation</option>
-            <option value="custom">Custom Event</option>
+            <option value="wedding">Wedding</option><option value="sweet17">Sweet Seventeen</option><option value="birthday">Birthday</option><option value="engagement">Engagement</option><option value="anniversary">Anniversary</option><option value="babyshower">Baby Shower</option><option value="graduation">Graduation</option><option value="custom">Custom Event</option>
           </select>
         </label>
-
-        <label>Label kecil
-          <input id="eventLabel" placeholder="The Wedding of">
-        </label>
-
-        <label>Judul besar
-          <input id="eventTitle" placeholder="Angga & Dellya" required>
-        </label>
-
-        <label>Nama utama / nama acara
-          <input id="mainName" placeholder="Angga & Dellya">
-        </label>
-
-        <label>Subjudul
-          <input id="subtitle" placeholder="Together with our families">
-        </label>
-
+        <label>Label kecil <input id="eventLabel" placeholder="The Wedding of"></label>
+        <label>Judul besar <input id="eventTitle" placeholder="Angga & Dellya" required></label>
+        <label>Nama utama / nama acara <input id="mainName" placeholder="Angga & Dellya"></label>
+        <label>Subjudul <input id="subtitle" placeholder="Together with our families"></label>
         <div class="two-col">
-          <label>Tanggal
-            <input id="eventDate" type="date">
-          </label>
-          <label>Waktu
-            <input id="eventTime" type="time">
-          </label>
+          <label>Tanggal <input id="eventDate" type="date"></label>
+          <label>Waktu <input id="eventTime" type="time"></label>
         </div>
-
-        <label>Lokasi
-          <input id="eventLocation" placeholder="Badung, Bali">
-        </label>
-
-        <label>Deskripsi
-          <textarea id="description" maxlength="1200" placeholder="Tuliskan detail acara..."></textarea>
-        </label>
-
-        <label>Foto cover
-          <input id="coverInput" type="file" accept="image/*">
-        </label>
-        <p id="coverInfo" class="status"></p>
-        <img id="coverPreview" class="preview" alt="Preview cover">
-
-        <label>Galeri (maks. 6 foto)
-          <input id="galleryInput" type="file" accept="image/*" multiple>
-        </label>
-        <p id="galleryInfo" class="status"></p>
-        <div id="galleryPreview" class="gallery"></div>
-
+        <label>Lokasi <input id="eventLocation" placeholder="Badung, Bali"></label>
+        <label>Link Google Maps <input id="mapsUrl" type="url" placeholder="https://maps.app.goo.gl/..."></label>
+        <label>Deskripsi <textarea id="description" maxlength="1200" placeholder="Tuliskan detail acara..."></textarea></label>
+        <label>Foto cover <input id="coverInput" type="file" accept="image/*"></label>
+        <p id="coverInfo" class="status"></p><img id="coverPreview" class="preview" alt="Preview cover">
+        <label>Galeri (maks. 6 foto) <input id="galleryInput" type="file" accept="image/*" multiple></label>
+        <p id="galleryInfo" class="status"></p><div id="galleryPreview" class="gallery"></div>
         <div class="admin-actions">
           <button type="submit">Simpan Undangan</button>
           <button type="button" id="loadEvent" class="secondary-btn">Muat dari Slug</button>
         </div>
         <p id="saveStatus" class="status" aria-live="polite"></p>
       </form>
-
       <aside class="card admin-side">
         <h3>Link Tamu</h3>
-        <label>Nama tamu
-          <textarea id="guestList" placeholder="Vio&#10;Kadek&#10;Keluarga Pak Made"></textarea>
-        </label>
+        <label>Nama tamu <textarea id="guestList" placeholder="Vio&#10;Kadek&#10;Keluarga Pak Made"></textarea></label>
         <button type="button" id="generateLinks">Generate Link</button>
         <div id="guestLinks" class="guest-links"></div>
-
         <hr>
-
         <h3>Komentar</h3>
         <button type="button" id="loadComments" class="secondary-btn">Muat Komentar</button>
         <div id="adminComments" class="comments"></div>
