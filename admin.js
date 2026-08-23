@@ -632,6 +632,59 @@ $("duplicateEvent").addEventListener("click",async()=>{
   }
 });
 
+
+$("deleteEvent").addEventListener("click",async()=>{
+  const slug=sanitizeSlug($("slug").value);
+
+  if(!slug){
+    $("saveStatus").textContent="Muat event yang ingin dihapus terlebih dahulu.";
+    return;
+  }
+
+  const typed=prompt(
+    `PERINGATAN\n\nAnda akan menghapus event:\n${slug}\n\n`+
+    `Ketik ulang slug berikut untuk konfirmasi:\n${slug}`
+  );
+
+  if(typed===null)return;
+
+  if(sanitizeSlug(typed)!==slug){
+    alert("Konfirmasi gagal. Slug yang diketik tidak sama.");
+    return;
+  }
+
+  const finalConfirm=confirm(
+    `Hapus event "${slug}" secara permanen?\n\n`+
+    `Data event dan semua komentar tamu untuk event ini akan dihapus dari database.\n\n`+
+    `Foto dan musik di R2 TIDAK akan dihapus otomatis demi keamanan.`
+  );
+
+  if(!finalConfirm)return;
+
+  $("saveStatus").textContent="Menghapus event...";
+
+  try{
+    const r=await fetch(
+      `/api/delete-event?slug=${encodeURIComponent(slug)}`,
+      {method:"DELETE"}
+    );
+
+    const data=await r.json();
+
+    if(!r.ok){
+      throw new Error(data.error||"Gagal menghapus event");
+    }
+
+    alert(`Event "${slug}" berhasil dihapus.`);
+
+    // Bersihkan halaman Admin agar tidak ada data lama yang masih terlihat.
+    location.reload();
+
+  }catch(err){
+    $("saveStatus").textContent=err.message;
+  }
+});
+
 $("loadEvent").addEventListener("click",async()=>{
   const slug=sanitizeSlug($("slug").value);
 
