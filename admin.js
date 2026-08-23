@@ -512,6 +512,60 @@ $("eventForm").addEventListener("submit",async e=>{
   }
 });
 
+
+function getCurrentInvitationUrl(guestName="Tamu"){
+  const slug=sanitizeSlug($("slug").value);
+
+  if(!slug){
+    $("saveStatus").textContent="Isi slug acara terlebih dahulu.";
+    return null;
+  }
+
+  return buildInvitationUrl(slug,guestName);
+}
+
+$("previewInvitation").addEventListener("click",()=>{
+  const url=getCurrentInvitationUrl("Tamu");
+
+  if(!url)return;
+
+  window.open(url,"_blank","noopener");
+});
+
+$("copyInvitationLink").addEventListener("click",async()=>{
+  const url=getCurrentInvitationUrl("Tamu");
+
+  if(!url)return;
+
+  try{
+    await navigator.clipboard.writeText(url);
+    $("saveStatus").textContent="Link undangan berhasil dicopy.";
+  }catch{
+    const input=document.createElement("textarea");
+    input.value=url;
+    input.style.position="fixed";
+    input.style.opacity="0";
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand("copy");
+    input.remove();
+
+    $("saveStatus").textContent="Link undangan berhasil dicopy.";
+  }
+});
+
+$("shareWhatsApp").addEventListener("click",()=>{
+  const url=getCurrentInvitationUrl("Tamu");
+
+  if(!url)return;
+
+  const title=$("eventTitle").value.trim()||"Undangan";
+  const message=`${title}\n\nSilakan buka undangan melalui link berikut:\n${url}`;
+
+  const waUrl=`https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(waUrl,"_blank","noopener");
+});
+
 $("loadEvent").addEventListener("click",async()=>{
   const slug=sanitizeSlug($("slug").value);
 
