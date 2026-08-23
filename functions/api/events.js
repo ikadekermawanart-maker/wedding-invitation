@@ -83,10 +83,26 @@ export async function onRequestPost(context){
 
   const cleanColors=(value)=>{
     if(!Array.isArray(value)) return [];
-    return value
-      .map(v=>String(v||"").trim().toUpperCase())
-      .filter(v=>/^#[0-9A-F]{6}$/.test(v))
-      .slice(0,6);
+
+    return value.map(item=>{
+      if(typeof item==="string"){
+        const color=String(item||"").trim().toUpperCase();
+        return /^#[0-9A-F]{6}$/.test(color)
+          ? {color,name:""}
+          : null;
+      }
+
+      if(item && typeof item==="object"){
+        const color=String(item.color||"").trim().toUpperCase();
+        const name=String(item.name||"").trim().slice(0,40);
+
+        return /^#[0-9A-F]{6}$/.test(color)
+          ? {color,name}
+          : null;
+      }
+
+      return null;
+    }).filter(Boolean).slice(0,6);
   };
 
   const maleColors=cleanColors(body.dresscode_male_colors);
@@ -104,7 +120,6 @@ export async function onRequestPost(context){
     return json({error:"Link Google Maps tidak valid"},400);
   }
 
-  // music_url dibuat oleh API internal, jadi path /media/... juga valid.
   if(musicUrl &&
      !/^https?:\/\//i.test(musicUrl) &&
      !/^\/media\//i.test(musicUrl)){
@@ -117,26 +132,9 @@ export async function onRequestPost(context){
 
   await context.env.DB.prepare(`
     INSERT INTO events (
-      slug,
-      event_type,
-      event_type_label,
-      event_label,
-      event_title,
-      main_name,
-      subtitle,
-      event_date,
-      event_time,
-      location,
-      maps_url,
-      music_url,
-      dresscode_title,
-      dresscode_note,
-      dresscode_male_colors,
-      dresscode_female_colors,
-      description,
-      cover_url,
-      gallery_urls,
-      updated_at
+      slug,event_type,event_type_label,event_label,event_title,main_name,subtitle,
+      event_date,event_time,location,maps_url,music_url,dresscode_title,dresscode_note,
+      dresscode_male_colors,dresscode_female_colors,description,cover_url,gallery_urls,updated_at
     )
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
     ON CONFLICT(slug) DO UPDATE SET
