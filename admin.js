@@ -30,7 +30,6 @@ function getInvitationBaseUrl(type){
 function buildInvitationUrl(slug,guestName="Tamu"){
   const type=$("eventType").value;
   const base=getInvitationBaseUrl(type).replace(/\/+$/,"");
-
   return `${base}/?event=${encodeURIComponent(slug)}&to=${encodeURIComponent(guestName)}`;
 }
 
@@ -527,7 +526,7 @@ $("loadEvent").addEventListener("click",async()=>{
     const r=await fetch(`/api/events?slug=${encodeURIComponent(slug)}`);
     const data=await r.json();
 
-    if(!r.ok) throw new Error(data.error||"Tidak ditemukan");
+    if(!r.ok)throw new Error(data.error||"Tidak ditemukan");
 
     const e=data.event;
 
@@ -634,7 +633,7 @@ $("generateLinks").addEventListener("click",()=>{
   }
 });
 
-$("loadComments").addEventListener("click",async()=>{
+async function loadAdminComments(){
   const slug=sanitizeSlug($("slug").value);
   const wrap=$("adminComments");
 
@@ -649,11 +648,16 @@ $("loadComments").addEventListener("click",async()=>{
     const r=await fetch(`/api/comments?wedding_id=${encodeURIComponent(slug)}`);
     const data=await r.json();
 
+    if(!r.ok) throw new Error(data.error||"Gagal memuat komentar");
+
     wrap.replaceChildren();
 
     for(const c of data.comments||[]){
       const d=document.createElement("div");
-      d.className="comment";
+      d.className="comment admin-comment-item";
+
+      const content=document.createElement("div");
+      content.className="admin-comment-content";
 
       const s=document.createElement("strong");
       s.textContent=c.guest_name;
@@ -661,14 +665,53 @@ $("loadComments").addEventListener("click",async()=>{
       const m=document.createElement("div");
       m.textContent=c.message;
 
-      d.append(s,m);
+      const meta=document.createElement("small");
+      meta.className="admin-comment-meta";
+      meta.textContent=c.created_at||"";
+
+      const deleteBtn=document.createElement("button");
+      deleteBtn.type="button";
+      deleteBtn.className="secondary-btn admin-comment-delete";
+      deleteBtn.textContent="Hapus";
+
+      deleteBtn.addEventListener("click",async()=>{
+        const ok=confirm(`Hapus ucapan dari "${c.guest_name}"?\n\n${c.message}`);
+        if(!ok)return;
+
+        deleteBtn.disabled=true;
+        deleteBtn.textContent="Menghapus...";
+
+        try{
+          const del=await fetch(
+            `/api/comments?id=${encodeURIComponent(c.id)}&wedding_id=${encodeURIComponent(slug)}`,
+            {method:"DELETE"}
+          );
+
+          const result=await del.json();
+
+          if(!del.ok){
+            throw new Error(result.error||"Gagal menghapus komentar");
+          }
+
+          await loadAdminComments();
+        }catch(err){
+          deleteBtn.disabled=false;
+          deleteBtn.textContent="Hapus";
+          alert(err.message);
+        }
+      });
+
+      content.append(s,m,meta);
+      d.append(content,deleteBtn);
       wrap.appendChild(d);
     }
 
     if(!(data.comments||[]).length){
       wrap.textContent="Belum ada komentar.";
     }
-  }catch{
-    wrap.textContent="Gagal memuat komentar.";
+  }catch(err){
+    wrap.textContent=err.message||"Gagal memuat komentar.";
   }
-});
+}
+
+$("loadComments").addEventListener("click",loadAdminComments);
