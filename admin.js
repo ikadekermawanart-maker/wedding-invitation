@@ -11,21 +11,13 @@ custom:["You're Invited","Custom Event"]
 
 let coverUrl="";
 let galleryUrls=[];
-
 const $=id=>document.getElementById(id);
 
 function sanitizeSlug(v){
-  return v.toLowerCase().trim()
-    .replace(/[^a-z0-9\s-]/g,"")
-    .replace(/\s+/g,"-")
-    .replace(/-+/g,"-")
-    .slice(0,80);
+  return v.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,"").replace(/\s+/g,"-").replace(/-+/g,"-").slice(0,80);
 }
 
-$("slug").addEventListener("input",e=>{
-  e.target.value=sanitizeSlug(e.target.value);
-});
-
+$("slug").addEventListener("input",e=>e.target.value=sanitizeSlug(e.target.value));
 $("eventType").addEventListener("change",e=>{
   $("eventLabel").value=(typeDefaults[e.target.value]||typeDefaults.custom)[0];
 });
@@ -35,137 +27,154 @@ async function compressImage(file,maxDimension=1600,quality=.78){
   const scale=Math.min(1,maxDimension/Math.max(bitmap.width,bitmap.height));
   const width=Math.max(1,Math.round(bitmap.width*scale));
   const height=Math.max(1,Math.round(bitmap.height*scale));
-
   const canvas=document.createElement("canvas");
-  canvas.width=width;
-  canvas.height=height;
-
+  canvas.width=width; canvas.height=height;
   canvas.getContext("2d").drawImage(bitmap,0,0,width,height);
   bitmap.close();
-
   const blob=await new Promise((resolve,reject)=>
-    canvas.toBlob(
-      b=>b?resolve(b):reject(new Error("Kompresi gagal")),
-      "image/webp",
-      quality
-    )
+    canvas.toBlob(b=>b?resolve(b):reject(new Error("Kompresi gagal")),"image/webp",quality)
   );
-
   return {blob,width,height};
 }
 
 async function uploadBlob(blob,slug,kind,index=0){
-  const r=await fetch(
-    `/api/upload?slug=${encodeURIComponent(slug)}&kind=${encodeURIComponent(kind)}&index=${index}`,
-    {
-      method:"POST",
-      headers:{"Content-Type":"image/webp"},
-      body:blob
-    }
-  );
-
+  const r=await fetch(`/api/upload?slug=${encodeURIComponent(slug)}&kind=${encodeURIComponent(kind)}&index=${index}`,{
+    method:"POST",headers:{"Content-Type":"image/webp"},body:blob
+  });
   const data=await r.json();
   if(!r.ok) throw new Error(data.error||"Upload gagal");
   return data.url;
 }
 
 function renderGalleryPreview(){
-  $("galleryPreview").replaceChildren();
+  const wrap=$("galleryPreview");
+  wrap.replaceChildren();
 
-  for(const url of galleryUrls){
+  galleryUrls.forEach((url,index)=>{
+    const item=document.createElement("div");
+    item.className="gallery-admin-item";
+
     const img=document.createElement("img");
     img.src=url;
-    img.alt="Preview galeri";
-    $("galleryPreview").appendChild(img);
+    img.alt=`Preview galeri ${index+1}`;
+
+    const actions=document.createElement("div");
+    actions.className="gallery-admin-actions";
+
+    const replaceBtn=document.createElement("button");
+    replaceBtn.type="button";
+    replaceBtn.className="secondary-btn gallery-replace-btn";
+    replaceBtn.textContent="Ganti";
+
+    const deleteBtn=document.createElement("button");
+    deleteBtn.type="button";
+    deleteBtn.className="secondary-btn gallery-delete-btn";
+    deleteBtn.textContent="Hapus";
+
+    replaceBtn.addEventListener("click",()=>replaceGalleryPhoto(index));
+    deleteBtn.addEventListener("click",()=>{
+      galleryUrls.splice(index,1);
+      renderGalleryPreview();
+      $("galleryInfo").textContent=`${galleryUrls.length} dari 6 foto. Klik Simpan Undangan untuk menyimpan perubahan.`;
+    });
+
+    actions.append(replaceBtn,deleteBtn);
+    item.append(img,actions);
+    wrap.appendChild(item);
+  });
+
+  if(!galleryUrls.length){
+    $("galleryInfo").textContent="Belum ada foto galeri.";
+  }
+}
+
+async function replaceGalleryPhoto(index){
+  const slug=sanitizeSlug($("slug").value);
+  if(!slug){
+    $("galleryInfo").textContent="Isi slug acara terlebih dahulu.";
+    return;
   }
 
-  $("galleryInfo").textContent=
-    galleryUrls.length
-      ? `${galleryUrls.length} dari 6 foto galeri tersimpan.`
-      : "Belum ada foto galeri.";
+  const picker=document.createElement("input");
+  picker.type="file";
+  picker.accept="image/*";
+
+  picker.addEventListener("change",async()=>{
+    const file=picker.files?.[0];
+    if(!file)return;
+
+    $("galleryInfo").textContent=`Mengganti foto ${index+1}...`;
+
+    try{
+      const out=await compressImage(file,1400,.76);
+      const url=await uploadBlob(out.blob,slug,"gallery",index);
+
+      // Cache-buster makes the new R2 object visible immediately even if URL is the same.
+      galleryUrls[index]=`${url.split("?")[0]}?v=${Date.now()}`;
+      renderGalleryPreview();
+      $("galleryInfo").textContent=`Foto ${index+1} berhasil diganti. Klik Simpan Undangan.`;
+    }catch(err){
+      $("galleryInfo").textContent=err.message;
+    }
+  },{once:true});
+
+  picker.click();
 }
 
 $("coverInput").addEventListener("change",async e=>{
-  const file=e.target.files?.[0];
-  const slug=sanitizeSlug($("slug").value);
-
-  if(!file) return;
-
+  const file=e.target.files?.[0],slug=sanitizeSlug($("slug").value);
+  if(!file)return;
   if(!slug){
     $("coverInfo").textContent="Isi Slug / URL acara terlebih dahulu.";
     e.target.value="";
     return;
   }
-
   $("coverInfo").textContent="Mengompres dan mengupload...";
-
   try{
     const out=await compressImage(file);
     coverUrl=await uploadBlob(out.blob,slug,"cover");
-
+    coverUrl=`${coverUrl.split("?")[0]}?v=${Date.now()}`;
     $("coverPreview").src=coverUrl;
     $("coverPreview").style.display="block";
-
-    $("coverInfo").textContent=
-      `${(file.size/1024/1024).toFixed(2)} MB → ${(out.blob.size/1024).toFixed(0)} KB • WebP`;
-  }catch(err){
-    $("coverInfo").textContent=err.message;
-  }
+    $("coverInfo").textContent=`${(file.size/1024/1024).toFixed(2)} MB → ${(out.blob.size/1024).toFixed(0)} KB • WebP`;
+  }catch(err){$("coverInfo").textContent=err.message}
 });
 
 $("galleryInput").addEventListener("change",async e=>{
   const selected=[...(e.target.files||[])];
   const slug=sanitizeSlug($("slug").value);
-
-  if(!selected.length) return;
-
+  if(!selected.length)return;
   if(!slug){
     $("galleryInfo").textContent="Isi Slug / URL acara terlebih dahulu.";
     e.target.value="";
     return;
   }
 
-  const remainingSlots=Math.max(0,6-galleryUrls.length);
-
-  if(remainingSlots===0){
+  const remaining=Math.max(0,6-galleryUrls.length);
+  if(!remaining){
     $("galleryInfo").textContent="Galeri sudah penuh: maksimal 6 foto.";
     e.target.value="";
     return;
   }
 
-  const files=selected.slice(0,remainingSlots);
-
-  if(selected.length>remainingSlots){
-    $("galleryInfo").textContent=
-      `Hanya ${remainingSlots} foto yang bisa ditambahkan karena batas total 6 foto. Mengupload...`;
-  }else{
-    $("galleryInfo").textContent="Mengompres dan menambahkan foto...";
-  }
+  const files=selected.slice(0,remaining);
+  $("galleryInfo").textContent="Mengompres dan menambahkan foto...";
 
   try{
     const startIndex=galleryUrls.length;
-
     for(let i=0;i<files.length;i++){
       const out=await compressImage(files[i],1400,.76);
-      const index=startIndex+i;
-      const url=await uploadBlob(out.blob,slug,"gallery",index);
-      galleryUrls.push(url);
+      const url=await uploadBlob(out.blob,slug,"gallery",startIndex+i);
+      galleryUrls.push(`${url.split("?")[0]}?v=${Date.now()}-${i}`);
     }
-
     renderGalleryPreview();
-
-    $("galleryInfo").textContent=
-      `${galleryUrls.length} dari 6 foto galeri tersimpan.`;
-
+    $("galleryInfo").textContent=`${galleryUrls.length} dari 6 foto. Klik Simpan Undangan.`;
     e.target.value="";
-  }catch(err){
-    $("galleryInfo").textContent=err.message;
-  }
+  }catch(err){$("galleryInfo").textContent=err.message}
 });
 
 function collectEvent(){
   const type=$("eventType").value;
-
   return {
     slug:sanitizeSlug($("slug").value),
     event_type:type,
@@ -186,56 +195,41 @@ function collectEvent(){
 
 $("eventForm").addEventListener("submit",async e=>{
   e.preventDefault();
-
-  const status=$("saveStatus");
-  const event=collectEvent();
+  const status=$("saveStatus"),event=collectEvent();
 
   if(!event.slug||!event.event_title){
     status.textContent="Slug dan Judul Besar wajib diisi.";
     return;
   }
-
   if(event.maps_url&&!/^https?:\/\//i.test(event.maps_url)){
     status.textContent="Link Google Maps harus diawali http:// atau https://";
     return;
   }
 
   status.textContent="Menyimpan...";
-
   try{
     const r=await fetch("/api/events",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(event)
     });
-
     const data=await r.json();
-
-    if(!r.ok) throw new Error(data.error||"Gagal menyimpan");
-
-    status.textContent=
-      `Tersimpan. Link: ${location.origin}/?event=${encodeURIComponent(event.slug)}&to=Tamu`;
-  }catch(err){
-    status.textContent=err.message;
-  }
+    if(!r.ok)throw new Error(data.error||"Gagal menyimpan");
+    status.textContent=`Tersimpan. Link: ${location.origin}/?event=${encodeURIComponent(event.slug)}&to=Tamu`;
+  }catch(err){status.textContent=err.message}
 });
 
 $("loadEvent").addEventListener("click",async()=>{
   const slug=sanitizeSlug($("slug").value);
-
   if(!slug){
     $("saveStatus").textContent="Isi slug terlebih dahulu.";
     return;
   }
-
   $("saveStatus").textContent="Memuat...";
-
   try{
     const r=await fetch(`/api/events?slug=${encodeURIComponent(slug)}`);
     const data=await r.json();
-
-    if(!r.ok) throw new Error(data.error||"Tidak ditemukan");
-
+    if(!r.ok)throw new Error(data.error||"Tidak ditemukan");
     const e=data.event;
 
     $("eventType").value=e.event_type||"custom";
@@ -263,21 +257,14 @@ $("loadEvent").addEventListener("click",async()=>{
     }
 
     renderGalleryPreview();
-
+    $("galleryInfo").textContent=galleryUrls.length?`${galleryUrls.length} dari 6 foto galeri tersimpan.`:"Belum ada foto galeri.";
     $("saveStatus").textContent="Data berhasil dimuat.";
-  }catch(err){
-    $("saveStatus").textContent=err.message;
-  }
+  }catch(err){$("saveStatus").textContent=err.message}
 });
 
 $("generateLinks").addEventListener("click",()=>{
   const slug=sanitizeSlug($("slug").value);
-  const names=$("guestList").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(Boolean)
-    .slice(0,200);
-
+  const names=$("guestList").value.split("\n").map(v=>v.trim()).filter(Boolean).slice(0,200);
   const wrap=$("guestLinks");
   wrap.replaceChildren();
 
@@ -287,61 +274,39 @@ $("generateLinks").addEventListener("click",()=>{
   }
 
   for(const name of names){
-    const url=
-      `${location.origin}/?event=${encodeURIComponent(slug)}&to=${encodeURIComponent(name)}`;
-
+    const url=`${location.origin}/?event=${encodeURIComponent(slug)}&to=${encodeURIComponent(name)}`;
     const row=document.createElement("div");
     row.className="guest-link-row";
-
     const a=document.createElement("a");
-    a.href=url;
-    a.target="_blank";
-    a.textContent=name;
-
+    a.href=url;a.target="_blank";a.textContent=name;
     const input=document.createElement("input");
-    input.value=url;
-    input.readOnly=true;
-
+    input.value=url;input.readOnly=true;
     row.append(a,input);
     wrap.appendChild(row);
   }
 });
 
 $("loadComments").addEventListener("click",async()=>{
-  const slug=sanitizeSlug($("slug").value);
-  const wrap=$("adminComments");
-
+  const slug=sanitizeSlug($("slug").value),wrap=$("adminComments");
   if(!slug){
     wrap.textContent="Isi slug acara terlebih dahulu.";
     return;
   }
-
   wrap.textContent="Memuat...";
-
   try{
     const r=await fetch(`/api/comments?wedding_id=${encodeURIComponent(slug)}`);
     const data=await r.json();
-
     wrap.replaceChildren();
-
     for(const c of data.comments||[]){
       const d=document.createElement("div");
       d.className="comment";
-
       const s=document.createElement("strong");
       s.textContent=c.guest_name;
-
       const m=document.createElement("div");
       m.textContent=c.message;
-
       d.append(s,m);
       wrap.appendChild(d);
     }
-
-    if(!(data.comments||[]).length){
-      wrap.textContent="Belum ada komentar.";
-    }
-  }catch{
-    wrap.textContent="Gagal memuat komentar.";
-  }
+    if(!(data.comments||[]).length)wrap.textContent="Belum ada komentar.";
+  }catch{wrap.textContent="Gagal memuat komentar."}
 });
