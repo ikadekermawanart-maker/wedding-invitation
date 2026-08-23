@@ -12,6 +12,8 @@ custom:["You're Invited","Custom Event"]
 let coverUrl="";
 let galleryUrls=[];
 let musicUrl="";
+let maleDressColors=[];
+let femaleDressColors=[];
 let dragIndex=null;
 
 const $=id=>document.getElementById(id);
@@ -292,6 +294,76 @@ $("galleryInput").addEventListener("change",async e=>{
 });
 
 
+
+function normalizeHex(value){
+  const v=String(value||"").trim();
+  return /^#[0-9a-f]{6}$/i.test(v) ? v.toUpperCase() : null;
+}
+
+function renderDressColors(type){
+  const list = type==="male" ? maleDressColors : femaleDressColors;
+  const wrap = type==="male" ? $("maleColors") : $("femaleColors");
+
+  wrap.replaceChildren();
+
+  list.forEach((color,index)=>{
+    const item=document.createElement("div");
+    item.className="dresscode-color-item";
+
+    const picker=document.createElement("input");
+    picker.type="color";
+    picker.value=color;
+    picker.title="Pilih warna";
+
+    const text=document.createElement("input");
+    text.type="text";
+    text.value=color.toUpperCase();
+    text.maxLength=7;
+    text.placeholder="#000000";
+    text.className="dresscode-hex";
+
+    const remove=document.createElement("button");
+    remove.type="button";
+    remove.className="secondary-btn dresscode-remove";
+    remove.textContent="×";
+    remove.title="Hapus warna";
+
+    const updateColor=(value)=>{
+      const valid=normalizeHex(value);
+      if(!valid)return;
+      list[index]=valid;
+      picker.value=valid;
+      text.value=valid;
+    };
+
+    picker.addEventListener("input",()=>updateColor(picker.value));
+    text.addEventListener("change",()=>updateColor(text.value));
+
+    remove.addEventListener("click",()=>{
+      list.splice(index,1);
+      renderDressColors(type);
+    });
+
+    item.append(picker,text,remove);
+    wrap.appendChild(item);
+  });
+}
+
+function addDressColor(type,color="#000000"){
+  const list=type==="male"?maleDressColors:femaleDressColors;
+
+  if(list.length>=6){
+    $("saveStatus").textContent="Maksimal 6 warna per kategori Dress Code.";
+    return;
+  }
+
+  list.push(normalizeHex(color)||"#000000");
+  renderDressColors(type);
+}
+
+$("addMaleColor").addEventListener("click",()=>addDressColor("male","#000000"));
+$("addFemaleColor").addEventListener("click",()=>addDressColor("female","#000000"));
+
 async function uploadMusicFile(file,slug){
   const allowedTypes=[
     "audio/mpeg",
@@ -383,6 +455,10 @@ function collectEvent(){
     location:$("eventLocation").value.trim(),
     maps_url:$("mapsUrl").value.trim(),
     music_url:musicUrl,
+    dresscode_title:$("dresscodeTitle").value.trim(),
+    dresscode_note:$("dresscodeNote").value.trim(),
+    dresscode_male_colors:maleDressColors.slice(0,6),
+    dresscode_female_colors:femaleDressColors.slice(0,6),
     description:$("description").value.trim(),
     cover_url:coverUrl,
     gallery_urls:galleryUrls.slice(0,6)
@@ -452,6 +528,20 @@ $("loadEvent").addEventListener("click",async()=>{
     $("eventTime").value=e.event_time||"";
     $("eventLocation").value=e.location||"";
     $("mapsUrl").value=e.maps_url||"";
+    $("dresscodeTitle").value=e.dresscode_title||"";
+    $("dresscodeNote").value=e.dresscode_note||"";
+
+    maleDressColors=Array.isArray(e.dresscode_male_colors)
+      ? e.dresscode_male_colors.filter(normalizeHex).slice(0,6)
+      : [];
+
+    femaleDressColors=Array.isArray(e.dresscode_female_colors)
+      ? e.dresscode_female_colors.filter(normalizeHex).slice(0,6)
+      : [];
+
+    renderDressColors("male");
+    renderDressColors("female");
+
     $("description").value=e.description||"";
 
     musicUrl=e.music_url||"";

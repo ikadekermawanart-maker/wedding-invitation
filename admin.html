@@ -63,6 +63,38 @@
           </label>
         </div>
 
+        <section class="dresscode-admin">
+          <h4>Dress Code</h4>
+
+          <label>Nama / tema
+            <input id="dresscodeTitle" placeholder="Black & White">
+          </label>
+
+          <label>Keterangan
+            <input id="dresscodeNote" placeholder="Semi Formal">
+          </label>
+
+          <div class="dresscode-color-group">
+            <div class="dresscode-color-head">
+              <strong>Warna Cowok</strong>
+              <button type="button" id="addMaleColor" class="secondary-btn">+ Tambah</button>
+            </div>
+            <div id="maleColors" class="dresscode-colors"></div>
+          </div>
+
+          <div class="dresscode-color-group">
+            <div class="dresscode-color-head">
+              <strong>Warna Cewek</strong>
+              <button type="button" id="addFemaleColor" class="secondary-btn">+ Tambah</button>
+            </div>
+            <div id="femaleColors" class="dresscode-colors"></div>
+          </div>
+
+          <p class="muted dresscode-help">
+            Jika seluruh bagian Dress Code dikosongkan, bagian ini tidak akan tampil di undangan.
+          </p>
+        </section>
+
         <label>Lokasi
           <input id="eventLocation" placeholder="Badung, Bali">
         </label>
