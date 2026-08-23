@@ -220,3 +220,7 @@
     width:100%;
   }
 }
+/* Duplicate Event button */
+#duplicateEvent{
+  border-style:dashed;
+}
