@@ -234,3 +234,23 @@
   background:#b42318!important;
   color:#fff!important;
 }
+
+/* Dress Code — Name field */
+.dresscode-color-item-named{
+  display:grid;
+  grid-template-columns:44px 110px minmax(140px,1fr) 42px;
+  gap:8px;
+  align-items:center;
+}
+.dresscode-color-name{
+  min-width:0;
+}
+@media(max-width:700px){
+  .dresscode-color-item-named{
+    grid-template-columns:44px 1fr 42px;
+  }
+  .dresscode-color-item-named .dresscode-color-name{
+    grid-column:1 / -1;
+    grid-row:2;
+  }
+}
