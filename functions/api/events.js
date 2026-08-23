@@ -1,3 +1,140 @@
-const json=(data,status=200)=>Response.json(data,{status,headers:{"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"}});
-export async function onRequestGet(context){const slug=(new URL(context.request.url).searchParams.get("slug")||"").trim();if(!slug||slug.length>80)return json({error:"Slug tidak valid"},400);const row=await context.env.DB.prepare(`SELECT slug,event_type,event_type_label,event_label,event_title,main_name,subtitle,event_date,event_time,location,maps_url,description,cover_url,gallery_urls,created_at,updated_at FROM events WHERE slug=?`).bind(slug).first();if(!row)return json({error:"Acara tidak ditemukan"},404);row.gallery_urls=row.gallery_urls?JSON.parse(row.gallery_urls):[];return json({event:row})}
-export async function onRequestPost(context){let body;try{body=await context.request.json()}catch{return json({error:"JSON tidak valid"},400)}const slug=String(body.slug||"").trim(),title=String(body.event_title||"").trim(),mapsUrl=String(body.maps_url||"").trim();if(!/^[a-z0-9-]{1,80}$/.test(slug))return json({error:"Slug tidak valid"},400);if(!title||title.length>160)return json({error:"Judul wajib diisi"},400);if(mapsUrl&&!/^https?:\/\//i.test(mapsUrl))return json({error:"Link Google Maps tidak valid"},400);const gallery=JSON.stringify(Array.isArray(body.gallery_urls)?body.gallery_urls.slice(0,6):[]);await context.env.DB.prepare(`INSERT INTO events (slug,event_type,event_type_label,event_label,event_title,main_name,subtitle,event_date,event_time,location,maps_url,description,cover_url,gallery_urls,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now')) ON CONFLICT(slug) DO UPDATE SET event_type=excluded.event_type,event_type_label=excluded.event_type_label,event_label=excluded.event_label,event_title=excluded.event_title,main_name=excluded.main_name,subtitle=excluded.subtitle,event_date=excluded.event_date,event_time=excluded.event_time,location=excluded.location,maps_url=excluded.maps_url,description=excluded.description,cover_url=excluded.cover_url,gallery_urls=excluded.gallery_urls,updated_at=datetime('now')`).bind(slug,String(body.event_type||"custom").slice(0,40),String(body.event_type_label||"Invitation").slice(0,80),String(body.event_label||"You're Invited").slice(0,120),title,String(body.main_name||"").slice(0,160),String(body.subtitle||"").slice(0,220),String(body.event_date||"").slice(0,20),String(body.event_time||"").slice(0,20),String(body.location||"").slice(0,240),mapsUrl.slice(0,1000),String(body.description||"").slice(0,1200),String(body.cover_url||"").slice(0,500),gallery).run();return json({ok:true,slug})}
+const json=(data,status=200)=>Response.json(data,{
+  status,
+  headers:{
+    "Cache-Control":"no-store",
+    "X-Content-Type-Options":"nosniff"
+  }
+});
+
+export async function onRequestGet(context){
+  const slug=(new URL(context.request.url).searchParams.get("slug")||"").trim();
+
+  if(!slug||slug.length>80){
+    return json({error:"Slug tidak valid"},400);
+  }
+
+  const row=await context.env.DB.prepare(`
+    SELECT
+      slug,
+      event_type,
+      event_type_label,
+      event_label,
+      event_title,
+      main_name,
+      subtitle,
+      event_date,
+      event_time,
+      location,
+      maps_url,
+      music_url,
+      description,
+      cover_url,
+      gallery_urls,
+      created_at,
+      updated_at
+    FROM events
+    WHERE slug=?
+  `).bind(slug).first();
+
+  if(!row){
+    return json({error:"Acara tidak ditemukan"},404);
+  }
+
+  row.gallery_urls=row.gallery_urls?JSON.parse(row.gallery_urls):[];
+
+  return json({event:row});
+}
+
+export async function onRequestPost(context){
+  let body;
+
+  try{
+    body=await context.request.json();
+  }catch{
+    return json({error:"JSON tidak valid"},400);
+  }
+
+  const slug=String(body.slug||"").trim();
+  const title=String(body.event_title||"").trim();
+  const mapsUrl=String(body.maps_url||"").trim();
+  const musicUrl=String(body.music_url||"").trim();
+
+  if(!/^[a-z0-9-]{1,80}$/.test(slug)){
+    return json({error:"Slug tidak valid"},400);
+  }
+
+  if(!title||title.length>160){
+    return json({error:"Judul wajib diisi"},400);
+  }
+
+  if(mapsUrl&&!/^https?:\/\//i.test(mapsUrl)){
+    return json({error:"Link Google Maps tidak valid"},400);
+  }
+
+  // music_url dibuat oleh API internal, jadi path /media/... juga valid.
+  if(musicUrl &&
+     !/^https?:\/\//i.test(musicUrl) &&
+     !/^\/media\//i.test(musicUrl)){
+    return json({error:"URL musik tidak valid"},400);
+  }
+
+  const gallery=JSON.stringify(
+    Array.isArray(body.gallery_urls)?body.gallery_urls.slice(0,6):[]
+  );
+
+  await context.env.DB.prepare(`
+    INSERT INTO events (
+      slug,
+      event_type,
+      event_type_label,
+      event_label,
+      event_title,
+      main_name,
+      subtitle,
+      event_date,
+      event_time,
+      location,
+      maps_url,
+      music_url,
+      description,
+      cover_url,
+      gallery_urls,
+      updated_at
+    )
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+    ON CONFLICT(slug) DO UPDATE SET
+      event_type=excluded.event_type,
+      event_type_label=excluded.event_type_label,
+      event_label=excluded.event_label,
+      event_title=excluded.event_title,
+      main_name=excluded.main_name,
+      subtitle=excluded.subtitle,
+      event_date=excluded.event_date,
+      event_time=excluded.event_time,
+      location=excluded.location,
+      maps_url=excluded.maps_url,
+      music_url=excluded.music_url,
+      description=excluded.description,
+      cover_url=excluded.cover_url,
+      gallery_urls=excluded.gallery_urls,
+      updated_at=datetime('now')
+  `).bind(
+    slug,
+    String(body.event_type||"custom").slice(0,40),
+    String(body.event_type_label||"Invitation").slice(0,80),
+    String(body.event_label||"You're Invited").slice(0,120),
+    title,
+    String(body.main_name||"").slice(0,160),
+    String(body.subtitle||"").slice(0,220),
+    String(body.event_date||"").slice(0,20),
+    String(body.event_time||"").slice(0,20),
+    String(body.location||"").slice(0,240),
+    mapsUrl.slice(0,1000),
+    musicUrl.slice(0,1000),
+    String(body.description||"").slice(0,1200),
+    String(body.cover_url||"").slice(0,500),
+    gallery
+  ).run();
+
+  return json({ok:true,slug});
+}
