@@ -45,7 +45,11 @@ export async function onRequestGet(context){
     return json({error:"Acara tidak ditemukan"},404);
   }
 
-  row.gallery_urls=row.gallery_urls?JSON.parse(row.gallery_urls):[];
+  try{
+    row.gallery_urls=row.gallery_urls?JSON.parse(row.gallery_urls):[];
+  }catch{
+    row.gallery_urls=[];
+  }
 
   try{
     row.dresscode_male_colors=row.dresscode_male_colors
@@ -140,9 +144,27 @@ export async function onRequestPost(context){
 
   await context.env.DB.prepare(`
     INSERT INTO events (
-      slug,event_type,event_type_label,event_label,event_title,main_name,subtitle,
-      event_date,event_time,location,maps_url,music_url,dresscode_title,dresscode_note,
-      dresscode_male_colors,dresscode_female_colors,description,cover_url,gallery_urls,updated_at
+      slug,
+      event_type,
+      event_type_label,
+      event_label,
+      event_title,
+      main_name,
+      subtitle,
+      event_date,
+      event_time,
+      location,
+      maps_url,
+      music_url,
+      dresscode_title,
+      dresscode_note,
+      dresscode_male_colors,
+      dresscode_female_colors,
+      description,
+      cover_url,
+      cover_video_url,
+      gallery_urls,
+      updated_at
     )
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
     ON CONFLICT(slug) DO UPDATE SET
