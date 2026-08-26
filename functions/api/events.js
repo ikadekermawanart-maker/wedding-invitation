@@ -33,6 +33,7 @@ export async function onRequestGet(context){
       dresscode_female_colors,
       description,
       cover_url,
+      cover_video_url,
       gallery_urls,
       created_at,
       updated_at
@@ -78,6 +79,7 @@ export async function onRequestPost(context){
   const title=String(body.event_title||"").trim();
   const mapsUrl=String(body.maps_url||"").trim();
   const musicUrl=String(body.music_url||"").trim();
+  const coverVideoUrl=String(body.cover_video_url||"").trim();
   const dresscodeTitle=String(body.dresscode_title||"").trim();
   const dresscodeNote=String(body.dresscode_note||"").trim();
 
@@ -126,6 +128,12 @@ export async function onRequestPost(context){
     return json({error:"URL musik tidak valid"},400);
   }
 
+  if(coverVideoUrl &&
+     !/^https?:\/\//i.test(coverVideoUrl) &&
+     !/^\/media\//i.test(coverVideoUrl)){
+    return json({error:"URL video cover tidak valid"},400);
+  }
+
   const gallery=JSON.stringify(
     Array.isArray(body.gallery_urls)?body.gallery_urls.slice(0,6):[]
   );
@@ -136,7 +144,7 @@ export async function onRequestPost(context){
       event_date,event_time,location,maps_url,music_url,dresscode_title,dresscode_note,
       dresscode_male_colors,dresscode_female_colors,description,cover_url,gallery_urls,updated_at
     )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
     ON CONFLICT(slug) DO UPDATE SET
       event_type=excluded.event_type,
       event_type_label=excluded.event_type_label,
@@ -155,6 +163,7 @@ export async function onRequestPost(context){
       dresscode_female_colors=excluded.dresscode_female_colors,
       description=excluded.description,
       cover_url=excluded.cover_url,
+      cover_video_url=excluded.cover_video_url,
       gallery_urls=excluded.gallery_urls,
       updated_at=datetime('now')
   `).bind(
@@ -176,6 +185,7 @@ export async function onRequestPost(context){
     JSON.stringify(femaleColors),
     String(body.description||"").slice(0,1200),
     String(body.cover_url||"").slice(0,500),
+    coverVideoUrl.slice(0,1000),
     gallery
   ).run();
 
