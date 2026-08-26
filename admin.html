@@ -120,6 +120,36 @@
         <p id="coverInfo" class="status"></p>
         <img id="coverPreview" class="preview" alt="Preview cover">
 
+        <section id="videoCoverSection" class="video-cover-admin">
+          <h4>Video Cover <span class="muted">(Wedding)</span></h4>
+
+          <label>Upload video cover
+            <input id="coverVideoInput"
+                   type="file"
+                   accept=".mp4,.webm,video/mp4,video/webm">
+          </label>
+
+          <p id="coverVideoInfo" class="status">Belum ada video cover.</p>
+
+          <video id="coverVideoPreview"
+                 controls
+                 muted
+                 playsinline
+                 preload="metadata"
+                 style="display:none;width:100%;margin:8px 0 12px;border-radius:14px;"></video>
+
+          <button type="button"
+                  id="removeCoverVideo"
+                  class="secondary-btn"
+                  style="display:none;">
+            Hapus Video Cover
+          </button>
+
+          <p class="muted video-cover-help">
+            Opsional. Wedding Template memakai video jika tersedia, dan Foto Cover sebagai fallback.
+          </p>
+        </section>
+
         <label>Galeri (maks. 6 foto)
           <input id="galleryInput" type="file" accept="image/*" multiple>
         </label>

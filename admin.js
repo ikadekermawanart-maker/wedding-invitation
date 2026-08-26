@@ -12,6 +12,7 @@ custom:["You're Invited","Custom Event"]
 let coverUrl="";
 let galleryUrls=[];
 let musicUrl="";
+let coverVideoUrl="";
 let maleDressColors=[];
 let femaleDressColors=[];
 let dragIndex=null;
@@ -490,6 +491,77 @@ $("removeMusic").addEventListener("click",()=>{
   $("musicInfo").textContent="Musik dihapus dari event. Klik Simpan Undangan.";
 });
 
+
+async function uploadCoverVideoFile(file,slug){
+  const allowedTypes=["video/mp4","video/webm"];
+
+  if(!allowedTypes.includes(file.type)){
+    throw new Error("Format video tidak didukung. Gunakan MP4 atau WebM.");
+  }
+
+  if(file.size>25*1024*1024){
+    throw new Error("Ukuran video terlalu besar. Maksimal 25 MB.");
+  }
+
+  const r=await fetch(
+    `/api/upload?slug=${encodeURIComponent(slug)}&kind=cover-video`,
+    {
+      method:"POST",
+      headers:{"Content-Type":file.type},
+      body:file
+    }
+  );
+
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error||"Upload video cover gagal");
+
+  return data.url;
+}
+
+$("coverVideoInput").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  const slug=sanitizeSlug($("slug").value);
+
+  if(!file)return;
+
+  if(!slug){
+    $("coverVideoInfo").textContent="Isi Slug / URL acara terlebih dahulu.";
+    e.target.value="";
+    return;
+  }
+
+  $("coverVideoInfo").textContent="Mengupload video cover...";
+
+  try{
+    const url=await uploadCoverVideoFile(file,slug);
+    coverVideoUrl=`${url.split("?")[0]}?v=${Date.now()}`;
+
+    $("coverVideoPreview").src=coverVideoUrl;
+    $("coverVideoPreview").style.display="block";
+    $("removeCoverVideo").style.display="inline-flex";
+
+    $("coverVideoInfo").textContent=
+      `${file.name} • ${(file.size/1024/1024).toFixed(2)} MB • berhasil diupload`;
+
+    e.target.value="";
+  }catch(err){
+    $("coverVideoInfo").textContent=err.message;
+  }
+});
+
+$("removeCoverVideo").addEventListener("click",()=>{
+  coverVideoUrl="";
+
+  $("coverVideoPreview").pause();
+  $("coverVideoPreview").removeAttribute("src");
+  $("coverVideoPreview").load();
+  $("coverVideoPreview").style.display="none";
+
+  $("removeCoverVideo").style.display="none";
+  $("coverVideoInfo").textContent=
+    "Video cover dihapus dari event. Klik Simpan Undangan.";
+});
+
 function collectEvent(){
   const type=$("eventType").value;
 
@@ -512,6 +584,7 @@ function collectEvent(){
     dresscode_female_colors:femaleDressColors.slice(0,6),
     description:$("description").value.trim(),
     cover_url:coverUrl,
+    cover_video_url:coverVideoUrl,
     gallery_urls:galleryUrls.slice(0,6)
   };
 }
@@ -791,7 +864,22 @@ $("loadEvent").addEventListener("click",async()=>{
     }
 
     coverUrl=e.cover_url||"";
+    coverVideoUrl=e.cover_video_url||"";
     galleryUrls=Array.isArray(e.gallery_urls)?e.gallery_urls.slice(0,6):[];
+
+    if(coverVideoUrl){
+      $("coverVideoPreview").src=coverVideoUrl;
+      $("coverVideoPreview").style.display="block";
+      $("removeCoverVideo").style.display="inline-flex";
+      $("coverVideoInfo").textContent="Video cover tersimpan untuk event ini.";
+    }else{
+      $("coverVideoPreview").pause();
+      $("coverVideoPreview").removeAttribute("src");
+      $("coverVideoPreview").load();
+      $("coverVideoPreview").style.display="none";
+      $("removeCoverVideo").style.display="none";
+      $("coverVideoInfo").textContent="Belum ada video cover.";
+    }
 
     if(coverUrl){
       $("coverPreview").src=coverUrl;
