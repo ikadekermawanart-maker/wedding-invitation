@@ -15,6 +15,11 @@ const MUSIC_TYPES = {
   "audio/aac": "aac"
 };
 
+const VIDEO_TYPES = {
+  "video/mp4": "mp4",
+  "video/webm": "webm"
+};
+
 export async function onRequestPost(context) {
   if (!context.env.MEDIA) {
     return json({ error: "R2 binding MEDIA belum terhubung" }, 500);
@@ -29,7 +34,7 @@ export async function onRequestPost(context) {
     return json({ error: "Slug tidak valid" }, 400);
   }
 
-  if (!["cover", "gallery", "music"].includes(kind)) {
+  if (!["cover", "gallery", "music", "cover-video"].includes(kind)) {
     return json({ error: "Jenis upload tidak valid" }, 400);
   }
 
@@ -56,7 +61,6 @@ export async function onRequestPost(context) {
       }, 415);
     }
 
-    // Maksimal 12 MB per file musik.
     maxBytes = 12 * 1024 * 1024;
 
     if (body.byteLength > maxBytes) {
@@ -67,12 +71,30 @@ export async function onRequestPost(context) {
 
     key = `${slug}/music.${extension}`;
 
+  } else if (kind === "cover-video") {
+    const extension = VIDEO_TYPES[contentType];
+
+    if (!extension) {
+      return json({
+        error: "Format video tidak didukung. Gunakan MP4 atau WebM."
+      }, 415);
+    }
+
+    maxBytes = 25 * 1024 * 1024;
+
+    if (body.byteLength > maxBytes) {
+      return json({
+        error: "Ukuran video terlalu besar. Maksimal 25 MB."
+      }, 413);
+    }
+
+    key = `${slug}/cover-video.${extension}`;
+
   } else {
     if (contentType !== "image/webp") {
       return json({ error: "Foto harus berformat WebP" }, 415);
     }
 
-    // Hasil kompres foto seharusnya jauh di bawah batas ini.
     maxBytes = 5 * 1024 * 1024;
 
     if (body.byteLength > maxBytes) {
