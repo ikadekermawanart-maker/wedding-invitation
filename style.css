@@ -254,3 +254,19 @@
     grid-row:2;
   }
 }
+
+/* Admin Video Cover */
+.video-cover-admin{
+  margin:20px 0;
+  padding:18px;
+  border:1px solid var(--line,#ddd);
+  border-radius:18px;
+  background:rgba(255,255,255,.32);
+}
+.video-cover-admin h4{
+  margin:0 0 12px;
+}
+.video-cover-help{
+  margin-top:10px;
+  font-size:11px;
+}
