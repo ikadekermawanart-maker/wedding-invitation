@@ -20,6 +20,7 @@ let dragIndex=null;
 const $=id=>document.getElementById(id);
 
 const invitationTemplateUrls={
+  wedding:"https://wedding-template-v1.pages.dev",
   sweet17:"https://sweet-seventeen-template.pages.dev"
 };
 
