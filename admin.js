@@ -575,6 +575,7 @@ function collectEvent(){
     main_name:$("mainName").value.trim(),
     subtitle:$("subtitle").value.trim(),
     event_date:$("eventDate").value,
+    date_language:$("dateLanguage").value==="en"?"en":"id",
     event_time:$("eventTime").value,
     location:$("eventLocation").value.trim(),
     maps_url:$("mapsUrl").value.trim(),
@@ -823,6 +824,7 @@ $("loadEvent").addEventListener("click",async()=>{
     $("mainName").value=e.main_name||"";
     $("subtitle").value=e.subtitle||"";
     $("eventDate").value=e.event_date||"";
+    $("dateLanguage").value=e.date_language==="en"?"en":"id";
     $("eventTime").value=e.event_time||"";
     $("eventLocation").value=e.location||"";
     $("mapsUrl").value=e.maps_url||"";
