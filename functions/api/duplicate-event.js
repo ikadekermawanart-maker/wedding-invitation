@@ -62,6 +62,7 @@ export async function onRequestPost(context){
       main_name,
       subtitle,
       event_date,
+      date_language,
       event_time,
       location,
       maps_url,
@@ -72,6 +73,7 @@ export async function onRequestPost(context){
       dresscode_female_colors,
       description,
       cover_url,
+      cover_video_url,
       gallery_urls,
       created_at,
       updated_at
@@ -85,6 +87,7 @@ export async function onRequestPost(context){
       main_name,
       subtitle,
       event_date,
+      COALESCE(NULLIF(date_language,''),'id'),
       event_time,
       location,
       maps_url,
@@ -95,6 +98,7 @@ export async function onRequestPost(context){
       dresscode_female_colors,
       description,
       cover_url,
+      cover_video_url,
       gallery_urls,
       datetime('now'),
       datetime('now')

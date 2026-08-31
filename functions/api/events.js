@@ -23,6 +23,7 @@ export async function onRequestGet(context){
       main_name,
       subtitle,
       event_date,
+      date_language,
       event_time,
       location,
       maps_url,
@@ -44,6 +45,8 @@ export async function onRequestGet(context){
   if(!row){
     return json({error:"Acara tidak ditemukan"},404);
   }
+
+  row.date_language=row.date_language==="en"?"en":"id";
 
   try{
     row.gallery_urls=row.gallery_urls?JSON.parse(row.gallery_urls):[];
@@ -86,6 +89,7 @@ export async function onRequestPost(context){
   const coverVideoUrl=String(body.cover_video_url||"").trim();
   const dresscodeTitle=String(body.dresscode_title||"").trim();
   const dresscodeNote=String(body.dresscode_note||"").trim();
+  const dateLanguage=body.date_language==="en"?"en":"id";
 
   const cleanColors=(value)=>{
     if(!Array.isArray(value)) return [];
@@ -152,6 +156,7 @@ export async function onRequestPost(context){
       main_name,
       subtitle,
       event_date,
+      date_language,
       event_time,
       location,
       maps_url,
@@ -166,7 +171,7 @@ export async function onRequestPost(context){
       gallery_urls,
       updated_at
     )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
     ON CONFLICT(slug) DO UPDATE SET
       event_type=excluded.event_type,
       event_type_label=excluded.event_type_label,
@@ -175,6 +180,7 @@ export async function onRequestPost(context){
       main_name=excluded.main_name,
       subtitle=excluded.subtitle,
       event_date=excluded.event_date,
+      date_language=excluded.date_language,
       event_time=excluded.event_time,
       location=excluded.location,
       maps_url=excluded.maps_url,
@@ -197,6 +203,7 @@ export async function onRequestPost(context){
     String(body.main_name||"").slice(0,160),
     String(body.subtitle||"").slice(0,220),
     String(body.event_date||"").slice(0,20),
+    dateLanguage,
     String(body.event_time||"").slice(0,20),
     String(body.location||"").slice(0,240),
     mapsUrl.slice(0,1000),
