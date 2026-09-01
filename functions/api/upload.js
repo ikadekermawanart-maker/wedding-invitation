@@ -34,7 +34,7 @@ export async function onRequestPost(context) {
     return json({ error: "Slug tidak valid" }, 400);
   }
 
-  if (!["cover", "gallery", "music", "cover-video"].includes(kind)) {
+  if (!["cover", "gallery", "music", "cover-video", "welcome-photo"].includes(kind)) {
     return json({ error: "Jenis upload tidak valid" }, 400);
   }
 
@@ -103,6 +103,8 @@ export async function onRequestPost(context) {
 
     if (kind === "cover") {
       key = `${slug}/cover.webp`;
+    } else if (kind === "welcome-photo") {
+      key = `${slug}/welcome-photo.webp`;
     } else {
       if (!Number.isInteger(index) || index < 0 || index > 20) {
         return json({ error: "Index galeri tidak valid" }, 400);
