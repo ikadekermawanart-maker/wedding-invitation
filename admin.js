@@ -438,9 +438,7 @@ $("welcomePhotoInput").addEventListener("change",async e=>{
   try{
     const out=await compressImage(file,1600,.80);
 
-    // Memakai jalur upload image yang sudah stabil.
-    // Index 99 sengaja dipisahkan agar tidak masuk ke galeri 0–5.
-    const url=await uploadBlob(out.blob,slug,"gallery",99);
+    const url=await uploadBlob(out.blob,slug,"welcome-photo");
     welcomePhotoUrl=`${url.split("?")[0]}?v=${Date.now()}`;
 
     $("welcomePhotoPreview").src=welcomePhotoUrl;
