@@ -33,6 +33,8 @@ export async function onRequestGet(context){
       dresscode_male_colors,
       dresscode_female_colors,
       description,
+      welcome_message,
+      welcome_photo_url,
       cover_url,
       cover_video_url,
       gallery_urls,
@@ -89,6 +91,8 @@ export async function onRequestPost(context){
   const coverVideoUrl=String(body.cover_video_url||"").trim();
   const dresscodeTitle=String(body.dresscode_title||"").trim();
   const dresscodeNote=String(body.dresscode_note||"").trim();
+  const welcomeMessage=String(body.welcome_message||"").trim();
+  const welcomePhotoUrl=String(body.welcome_photo_url||"").trim();
   const dateLanguage=body.date_language==="en"?"en":"id";
 
   const cleanColors=(value)=>{
@@ -142,6 +146,12 @@ export async function onRequestPost(context){
     return json({error:"URL video cover tidak valid"},400);
   }
 
+  if(welcomePhotoUrl &&
+     !/^https?:\/\//i.test(welcomePhotoUrl) &&
+     !/^\/media\//i.test(welcomePhotoUrl)){
+    return json({error:"URL foto kata sambutan tidak valid"},400);
+  }
+
   const gallery=JSON.stringify(
     Array.isArray(body.gallery_urls)?body.gallery_urls.slice(0,6):[]
   );
@@ -166,12 +176,14 @@ export async function onRequestPost(context){
       dresscode_male_colors,
       dresscode_female_colors,
       description,
+      welcome_message,
+      welcome_photo_url,
       cover_url,
       cover_video_url,
       gallery_urls,
       updated_at
     )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
     ON CONFLICT(slug) DO UPDATE SET
       event_type=excluded.event_type,
       event_type_label=excluded.event_type_label,
@@ -190,6 +202,8 @@ export async function onRequestPost(context){
       dresscode_male_colors=excluded.dresscode_male_colors,
       dresscode_female_colors=excluded.dresscode_female_colors,
       description=excluded.description,
+      welcome_message=excluded.welcome_message,
+      welcome_photo_url=excluded.welcome_photo_url,
       cover_url=excluded.cover_url,
       cover_video_url=excluded.cover_video_url,
       gallery_urls=excluded.gallery_urls,
@@ -213,6 +227,8 @@ export async function onRequestPost(context){
     JSON.stringify(maleColors),
     JSON.stringify(femaleColors),
     String(body.description||"").slice(0,1200),
+    welcomeMessage.slice(0,1200),
+    welcomePhotoUrl.slice(0,1000),
     String(body.cover_url||"").slice(0,500),
     coverVideoUrl.slice(0,1000),
     gallery
