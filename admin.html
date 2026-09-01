@@ -114,6 +114,26 @@
           <textarea id="description" maxlength="1200" placeholder="Tuliskan detail acara..."></textarea>
         </label>
 
+        <section class="welcome-admin">
+          <h4>Kata Sambutan</h4>
+
+          <label>Foto Kata Sambutan
+            <input id="welcomePhotoInput" type="file" accept="image/*">
+          </label>
+          <p id="welcomePhotoInfo" class="status">Belum ada foto kata sambutan.</p>
+          <img id="welcomePhotoPreview" class="preview" alt="Preview foto kata sambutan">
+
+          <label>Kata Sambutan
+            <textarea id="welcomeMessage"
+                      maxlength="1200"
+                      placeholder="Merupakan suatu kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu kepada kami."></textarea>
+          </label>
+
+          <p class="muted">
+            Nama pengantin di bawah kata sambutan otomatis menggunakan Nama utama / nama acara.
+          </p>
+        </section>
+
         <label>Musik Latar
           <input id="musicInput" type="file" accept=".mp3,.m4a,.aac,audio/mpeg,audio/mp4,audio/aac">
         </label>

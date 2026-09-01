@@ -13,6 +13,7 @@ let coverUrl="";
 let galleryUrls=[];
 let musicUrl="";
 let coverVideoUrl="";
+let welcomePhotoUrl="";
 let maleDressColors=[];
 let femaleDressColors=[];
 let dragIndex=null;
@@ -419,6 +420,40 @@ function addDressColor(type,color="#000000"){
 $("addMaleColor").addEventListener("click",()=>addDressColor("male","#000000"));
 $("addFemaleColor").addEventListener("click",()=>addDressColor("female","#000000"));
 
+
+$("welcomePhotoInput").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  const slug=sanitizeSlug($("slug").value);
+
+  if(!file)return;
+
+  if(!slug){
+    $("welcomePhotoInfo").textContent="Isi Slug / URL acara terlebih dahulu.";
+    e.target.value="";
+    return;
+  }
+
+  $("welcomePhotoInfo").textContent="Mengompres dan mengupload foto kata sambutan...";
+
+  try{
+    const out=await compressImage(file,1600,.80);
+
+    // Memakai jalur upload image yang sudah stabil.
+    // Index 99 sengaja dipisahkan agar tidak masuk ke galeri 0–5.
+    const url=await uploadBlob(out.blob,slug,"gallery",99);
+    welcomePhotoUrl=`${url.split("?")[0]}?v=${Date.now()}`;
+
+    $("welcomePhotoPreview").src=welcomePhotoUrl;
+    $("welcomePhotoPreview").style.display="block";
+    $("welcomePhotoInfo").textContent=
+      `${(file.size/1024/1024).toFixed(2)} MB → ${(out.blob.size/1024).toFixed(0)} KB • WebP`;
+
+    e.target.value="";
+  }catch(err){
+    $("welcomePhotoInfo").textContent=err.message;
+  }
+});
+
 async function uploadMusicFile(file,slug){
   const allowedTypes=[
     "audio/mpeg",
@@ -585,6 +620,8 @@ function collectEvent(){
     dresscode_male_colors:maleDressColors.slice(0,6),
     dresscode_female_colors:femaleDressColors.slice(0,6),
     description:$("description").value.trim(),
+    welcome_message:$("welcomeMessage").value.trim(),
+    welcome_photo_url:welcomePhotoUrl,
     cover_url:coverUrl,
     cover_video_url:coverVideoUrl,
     gallery_urls:galleryUrls.slice(0,6)
@@ -849,6 +886,19 @@ $("loadEvent").addEventListener("click",async()=>{
     renderDressColors("female");
 
     $("description").value=e.description||"";
+    $("welcomeMessage").value=e.welcome_message||"";
+
+    welcomePhotoUrl=e.welcome_photo_url||"";
+
+    if(welcomePhotoUrl){
+      $("welcomePhotoPreview").src=welcomePhotoUrl;
+      $("welcomePhotoPreview").style.display="block";
+      $("welcomePhotoInfo").textContent="Foto kata sambutan tersimpan.";
+    }else{
+      $("welcomePhotoPreview").removeAttribute("src");
+      $("welcomePhotoPreview").style.display="none";
+      $("welcomePhotoInfo").textContent="Belum ada foto kata sambutan.";
+    }
 
     musicUrl=e.music_url||"";
 
